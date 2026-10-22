@@ -1,12 +1,12 @@
-# ProofScout
+# EvidenceScout
 
 **Evidence-to-experiment recommendations for independent builders.**
 
-ProofScout scans a deliberately small set of public GitHub repositories, finds recurring developer-workflow friction, and ranks opportunities against a builder's target skills and available time.
+EvidenceScout scans a deliberately small set of public GitHub repositories, finds recurring developer-workflow friction, and ranks opportunities against a builder's target skills and available time.
 
 It does not claim that a GitHub Issue proves a business opportunity. Instead, it keeps the distinction visible:
 
-| Signal | What ProofScout can say |
+| Signal | What EvidenceScout can say |
 | --- | --- |
 | GitHub Issue evidence | A developer workflow pain may exist. |
 | Personal fit score | This may be a good technical project for this builder. |

@@ -1,12 +1,12 @@
-# ProofScout: project brief and interview guide
+# EvidenceScout: project brief and interview guide
 
 ## One-sentence definition
 
-ProofScout is an evidence-to-experiment tool for independent developers: it converts public GitHub Issue signals into transparent, personalized technical validation recommendations.
+EvidenceScout is an evidence-to-experiment tool for independent developers: it converts public GitHub Issue signals into transparent, personalized technical validation recommendations.
 
 ## What problem it solves
 
-Individual developers often collect many feature requests but cannot quickly decide which one is both grounded in user friction and small enough to test. ProofScout narrows a deliberately bounded repository set, preserves original evidence links, and outputs a one-week experiment rather than a generic startup idea.
+Individual developers often collect many feature requests but cannot quickly decide which one is both grounded in user friction and small enough to test. EvidenceScout narrows a deliberately bounded repository set, preserves original evidence links, and outputs a one-week experiment rather than a generic startup idea.
 
 ## Live demo flow
 
@@ -42,7 +42,7 @@ The application reads only public open Issues. It stores local scan metadata and
 
 ## Resume-safe description
 
-**ProofScout | Python, Streamlit, GitHub REST API, SQLite, Docker, GitHub Actions**  
+**EvidenceScout | Python, Streamlit, GitHub REST API, SQLite, Docker, GitHub Actions**
 Built an evidence-to-experiment recommendation tool for independent developers that scans public GitHub Issues, removes pull requests, classifies developer-workflow friction, and ranks validation opportunities against user-selected skills and time constraints. Designed transparent scoring with linked source evidence and measurable experiment criteria; persisted structured scan snapshots in SQLite and exported Markdown reports. Added unit tests and CI for repository parsing, signal classification, personalization behavior, persistence, and report generation.
 
 ## Likely interview questions

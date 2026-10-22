@@ -18,7 +18,7 @@ class GitHubScanError(RuntimeError):
 def fetch_open_issues(repositories: Iterable[str], per_repo: int = 30, token: str | None = None) -> list[IssueEvidence]:
     headers = {
         "Accept": "application/vnd.github+json",
-        "User-Agent": "ProofScout-MVP",
+        "User-Agent": "EvidenceScout-MVP",
         "X-GitHub-Api-Version": "2022-11-28",
     }
     token = token or os.getenv("GITHUB_TOKEN")

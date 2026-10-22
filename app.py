@@ -17,7 +17,7 @@ https://github.com/hashicorp/terraform
 https://github.com/microsoft/vscode"""
 DB_PATH = Path(__file__).parent / "proofscout.db"
 
-st.set_page_config(page_title="ProofScout", page_icon="🔎", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="EvidenceScout", page_icon="🔎", layout="wide", initial_sidebar_state="expanded")
 st.markdown("""
 <style>
     .stApp { background: #f7f8fc; }
@@ -60,7 +60,7 @@ def scan(repositories: list[str], source_mode: str, profile: BuilderProfile) -> 
 
 
 with st.sidebar:
-    st.markdown("## 🔎 ProofScout")
+    st.markdown("## 🔎 EvidenceScout")
     st.caption("Evidence-to-experiment recommendations for independent builders.")
     st.divider()
     st.markdown("### Builder profile")
@@ -68,7 +68,7 @@ with st.sidebar:
     time_budget = st.selectbox("First MVP time budget", ["7 days", "14 days", "21 days"], index=0)
     selected_skills = st.multiselect("Skills to develop", ["Frontend UI", "REST API", "Database", "GitHub API", "Testing", "Docker / CI"], default=["Frontend UI", "REST API", "Database", "Testing"])
     st.divider()
-    st.caption("ProofScout ranks technical fit. It does not infer willingness to pay.")
+    st.caption("EvidenceScout ranks technical fit. It does not infer willingness to pay.")
 
 st.markdown("""
 <section class="hero">

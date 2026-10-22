@@ -1,4 +1,4 @@
-"""Pure, auditable discovery and recommendation logic for ProofScout."""
+"""Pure, auditable discovery and recommendation logic for EvidenceScout."""
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
@@ -236,7 +236,7 @@ def serialize_opportunity(opportunity: Opportunity) -> dict:
 
 def markdown_report(repositories: list[str], profile: BuilderProfile, opportunities: Iterable[Opportunity], source_mode: str) -> str:
     lines = [
-        "# ProofScout validation report",
+        "# EvidenceScout validation report",
         "",
         f"- Evidence source: {source_mode}",
         f"- Builder direction: {profile.target}",
