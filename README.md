@@ -19,9 +19,9 @@ It does not claim that a GitHub Issue proves a business opportunity. Instead, it
 2. Collects open Issues through GitHub's public REST API and ignores pull requests.
 3. Detects concrete friction and workaround language with transparent rules.
 4. Groups issue evidence into developer-workflow opportunity themes.
-5. Ranks themes for a full-stack builder with a 7-day time limit.
-6. Generates a bounded, manual-first technical experiment with success criteria.
-7. Stores scan snapshots locally in SQLite for a small evidence history.
+5. Ranks themes using the builder's selected direction, skills and time budget, with visible reasons for each score.
+6. Generates a bounded, manual-first technical experiment with a measurable success criterion.
+7. Stores structured scan-report snapshots locally in SQLite and exports a Markdown evidence report.
 
 ## Run locally
 
@@ -57,6 +57,9 @@ SQLite scan store ◄── opportunity clusterer ◄── fit scorer
                                               │
                                               ▼
                                     experiment-plan generator
+                                              │
+                                              ▼
+                               Markdown / structured report export
 ```
 
 ## Scope and intentional limitations
@@ -71,6 +74,12 @@ SQLite scan store ◄── opportunity clusterer ◄── fit scorer
 ```powershell
 python -m unittest discover -s tests -v
 ```
+
+The test suite covers repository parsing, friction classification, personalized-score changes, report persistence, and Markdown export.
+
+## Interview-ready notes
+
+For a concise system overview, demo path, trade-offs, and resume-safe project description, see [docs/interview-guide.md](docs/interview-guide.md).
 
 ## Next iteration
 

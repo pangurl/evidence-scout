@@ -1,6 +1,8 @@
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
-from core import IssueEvidence, is_friction, make_opportunities, parse_repository
+from core import BuilderProfile, IssueEvidence, is_friction, make_opportunities, markdown_report, parse_repository, recent_scan_reports, save_scan
 from demo_data import load_demo_issues
 
 
@@ -25,6 +27,22 @@ class CoreTests(unittest.TestCase):
 
     def test_demo_fixture_creates_recommendations(self):
         self.assertGreaterEqual(len(make_opportunities(load_demo_issues())), 2)
+
+    def test_profile_skills_change_recommendation_fit(self):
+        evidence = [issue(), issue(repo="other/tool", title="Manual deployment workflow", body="Our deployment is manual and we need automation.")]
+        strong = BuilderProfile(target="Full-stack", days=7, skills=("REST API", "Testing", "Docker / CI"))
+        minimal = BuilderProfile(target="Backend", days=7, skills=())
+        self.assertGreater(make_opportunities(evidence, strong)[0].fit_score, make_opportunities(evidence, minimal)[0].fit_score)
+
+    def test_report_snapshot_and_markdown_export(self):
+        opportunities = make_opportunities([issue()])
+        profile = BuilderProfile(target="Full-stack", days=7, skills=("Testing",))
+        with TemporaryDirectory() as directory:
+            db = Path(directory) / "scan.db"
+            save_scan(db, ["org/tool"], 1, opportunities, profile, "Demo fixtures (reproducible)")
+            self.assertEqual(len(recent_scan_reports(db)), 1)
+        report = markdown_report(["org/tool"], profile, opportunities, "Demo fixtures (reproducible)")
+        self.assertIn("Success criterion", report)
 
 
 if __name__ == "__main__":

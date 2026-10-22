@@ -5,7 +5,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from core import init_database, make_opportunities, parse_repository, save_scan
+from core import BuilderProfile, init_database, make_opportunities, markdown_report, parse_repository, recent_scan_reports, save_scan, serialize_opportunity
 from demo_data import load_demo_issues
 from github_client import GitHubScanError, fetch_open_issues
 
@@ -39,7 +39,7 @@ def token_from_secrets() -> str | None:
         return os.getenv("GITHUB_TOKEN")
 
 
-def scan(repositories: list[str], source_mode: str) -> None:
+def scan(repositories: list[str], source_mode: str, profile: BuilderProfile) -> None:
     with st.status("Scanning public GitHub Issues…", expanded=True) as status:
         if source_mode == "Demo fixtures (reproducible)":
             st.write("Loading clearly labelled fixture evidence for a deterministic product walkthrough.")
@@ -48,13 +48,15 @@ def scan(repositories: list[str], source_mode: str) -> None:
             st.write("Fetching open Issues and excluding pull requests.")
             issues = fetch_open_issues(repositories, token=token_from_secrets())
         st.write(f"Normalized {len(issues)} Issue records.")
-        opportunities = make_opportunities(issues, days=7)
+        opportunities = make_opportunities(issues, profile=profile)
         st.write(f"Generated {len(opportunities)} evidence-backed opportunity themes.")
-        save_scan(DB_PATH, repositories, len(issues), len(opportunities))
+        save_scan(DB_PATH, repositories, len(issues), opportunities, profile, source_mode)
         status.update(label="Scan completed", state="complete", expanded=False)
     st.session_state["repositories"] = repositories
     st.session_state["issues"] = issues
     st.session_state["opportunities"] = opportunities
+    st.session_state["profile"] = profile
+    st.session_state["source_mode"] = source_mode
 
 
 with st.sidebar:
@@ -64,7 +66,7 @@ with st.sidebar:
     st.markdown("### Builder profile")
     target = st.selectbox("Primary capability goal", ["Full-stack", "Backend", "AI workflow", "Data engineering"], index=0)
     time_budget = st.selectbox("First MVP time budget", ["7 days", "14 days", "21 days"], index=0)
-    st.multiselect("Skills to develop", ["Frontend UI", "REST API", "Database", "GitHub API", "Testing", "Docker / CI"], default=["Frontend UI", "REST API", "Database", "Testing"])
+    selected_skills = st.multiselect("Skills to develop", ["Frontend UI", "REST API", "Database", "GitHub API", "Testing", "Docker / CI"], default=["Frontend UI", "REST API", "Database", "Testing"])
     st.divider()
     st.caption("ProofScout ranks technical fit. It does not infer willingness to pay.")
 
@@ -86,6 +88,7 @@ with right:
 repos = [parse_repository(line) for line in raw_repos.splitlines() if line.strip()]
 invalid = [line for line in raw_repos.splitlines() if line.strip() and parse_repository(line) is None]
 repositories = list(dict.fromkeys(repo for repo in repos if repo))
+profile = BuilderProfile(target=target, days=int(time_budget.split()[0]), skills=tuple(selected_skills))
 if invalid:
     st.warning("Ignored invalid repository values: " + ", ".join(invalid))
 if not 3 <= len(repositories) <= 10:
@@ -94,7 +97,7 @@ if not 3 <= len(repositories) <= 10:
 if st.button("Scan opportunity evidence", type="primary", disabled=not 3 <= len(repositories) <= 10, use_container_width=True):
     st.session_state["raw_repos"] = raw_repos
     try:
-        scan(repositories, source_mode)
+        scan(repositories, source_mode, profile)
     except GitHubScanError as error:
         st.error(str(error))
     except Exception as error:
@@ -111,7 +114,11 @@ else:
     b.metric("Public Issues normalized", len(issues))
     c.metric("Opportunity themes", len(opportunities))
     st.markdown("## Recommended validation opportunities")
-    if source_mode == "Demo fixtures (reproducible)":
+    # A code reload can preserve results from an older Streamlit session.
+    # Fall back to the currently visible controls so an interrupted scan never breaks the report view.
+    report_profile = st.session_state.get("profile", profile)
+    report_source = st.session_state.get("source_mode", source_mode)
+    if report_source == "Demo fixtures (reproducible)":
         st.warning("Demo mode: the following evidence records are illustrative fixtures for a repeatable walkthrough. Switch to Live GitHub API and provide a token for current public data.")
     if not opportunities:
         st.warning("No sufficiently clear friction signals were found. This is a useful result: narrow the repository set or inspect individual Issues before inferring an opportunity.")
@@ -126,11 +133,25 @@ else:
                 st.markdown(f"- {reason}")
             st.markdown("#### Bounded technical experiment")
             st.markdown(f"**{opportunity.experiment_title}** — {opportunity.experiment_steps}")
+            st.markdown(f"**Success criterion:** {opportunity.success_criterion}")
             st.markdown("#### Original public evidence")
             for item in opportunity.evidence:
                 excerpt = (item.body or item.title).replace("\n", " ").strip()[:220]
                 st.markdown(f"- [{item.repo} #{item.number}: {item.title}]({item.url})  ")
                 st.caption(f"{item.comments} comments · {item.reactions} positive reactions · {excerpt}")
             st.info("Interpretation boundary: these Issues demonstrate possible workflow friction, not a verified commercial opportunity.")
+    st.markdown("## Exportable evidence report")
+    markdown = markdown_report(st.session_state["repositories"], report_profile, opportunities, report_source)
+    st.download_button("Download Markdown report", markdown, file_name="proofscout-validation-report.md", mime="text/markdown", use_container_width=True)
+    with st.expander("Structured report preview"):
+        st.json({"profile": {"target": report_profile.target, "days": report_profile.days, "skills": report_profile.skills}, "opportunities": [serialize_opportunity(item) for item in opportunities]})
+
+with st.expander("Recent local scan snapshots"):
+    history = recent_scan_reports(DB_PATH)
+    if history:
+        for item in history:
+            st.caption(f"{item['created_at']} · {item['source_mode']} · {item['profile']['target']} · {len(item['opportunities'])} themes")
+    else:
+        st.caption("No local scan snapshot yet.")
 
 init_database(DB_PATH)
