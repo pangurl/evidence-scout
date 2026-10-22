@@ -4,4 +4,5 @@ __pycache__/
 .env
 .streamlit/secrets.toml
 proofscout.db
+evidencescout.db
 .pytest_cache/

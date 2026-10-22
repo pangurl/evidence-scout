@@ -15,7 +15,7 @@ https://github.com/fastapi/fastapi
 https://github.com/docker/compose
 https://github.com/hashicorp/terraform
 https://github.com/microsoft/vscode"""
-DB_PATH = Path(__file__).parent / "proofscout.db"
+DB_PATH = Path(__file__).parent / "evidencescout.db"
 
 st.set_page_config(page_title="EvidenceScout", page_icon="🔎", layout="wide", initial_sidebar_state="expanded")
 st.markdown("""
@@ -70,6 +70,8 @@ with st.sidebar:
     st.divider()
     st.caption("EvidenceScout ranks technical fit. It does not infer willingness to pay.")
 
+profile = BuilderProfile(target=target, days=int(time_budget.split()[0]), skills=tuple(selected_skills))
+
 st.markdown("""
 <section class="hero">
   <div class="label" style="color:#bbd0ff">DEVELOPER OPPORTUNITY INTELLIGENCE</div>
@@ -82,13 +84,12 @@ left, right = st.columns([1.8, 1])
 with left:
     raw_repos = st.text_area("GitHub repositories (3–10 URLs or owner/repo values)", value=st.session_state.get("raw_repos", DEFAULT_REPOS), height=150)
 with right:
-    st.markdown("<div class='signal-card'><div class='label'>YOUR DEFAULT CONSTRAINT</div><h3>Full-stack · 7 days</h3><p>Recommendations favour bounded work that can show UI, API/data integration, persistence and a reproducible experiment.</p></div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='signal-card'><div class='label'>BUILDER CONSTRAINT</div><h3>{profile.target} · {profile.days} days</h3><p>Recommendations favour bounded work that can show an inspectable technical path, source evidence, and a reproducible experiment.</p></div>", unsafe_allow_html=True)
     source_mode = st.radio("Evidence mode", ["Demo fixtures (reproducible)", "Live GitHub API"], help="Demo fixtures are illustrative and clearly labelled. Live mode reads public open Issues and may need a token due to GitHub rate limits.")
 
 repos = [parse_repository(line) for line in raw_repos.splitlines() if line.strip()]
 invalid = [line for line in raw_repos.splitlines() if line.strip() and parse_repository(line) is None]
 repositories = list(dict.fromkeys(repo for repo in repos if repo))
-profile = BuilderProfile(target=target, days=int(time_budget.split()[0]), skills=tuple(selected_skills))
 if invalid:
     st.warning("Ignored invalid repository values: " + ", ".join(invalid))
 if not 3 <= len(repositories) <= 10:
@@ -113,11 +114,11 @@ else:
     a.metric("Repositories scanned", len(st.session_state["repositories"]))
     b.metric("Public Issues normalized", len(issues))
     c.metric("Opportunity themes", len(opportunities))
-    st.markdown("## Recommended validation opportunities")
     # A code reload can preserve results from an older Streamlit session.
     # Fall back to the currently visible controls so an interrupted scan never breaks the report view.
     report_profile = st.session_state.get("profile", profile)
     report_source = st.session_state.get("source_mode", source_mode)
+    st.markdown(f"## Recommended validation opportunities for {report_profile.target} · {report_profile.days} days")
     if report_source == "Demo fixtures (reproducible)":
         st.warning("Demo mode: the following evidence records are illustrative fixtures for a repeatable walkthrough. Switch to Live GitHub API and provide a token for current public data.")
     if not opportunities:
@@ -128,7 +129,7 @@ else:
             col1.metric("Personal fit", f"{opportunity.fit_score}/100")
             col2.metric("Pain evidence", f"{opportunity.pain_score}/100")
             col3.metric("Evidence status", opportunity.confidence)
-            st.markdown("#### Why this fits a full-stack, seven-day build")
+            st.markdown(f"#### Why this fits a {report_profile.target.lower()} build within {report_profile.days} days")
             for reason in opportunity.reasons:
                 st.markdown(f"- {reason}")
             st.markdown("#### Bounded technical experiment")
@@ -142,7 +143,7 @@ else:
             st.info("Interpretation boundary: these Issues demonstrate possible workflow friction, not a verified commercial opportunity.")
     st.markdown("## Exportable evidence report")
     markdown = markdown_report(st.session_state["repositories"], report_profile, opportunities, report_source)
-    st.download_button("Download Markdown report", markdown, file_name="proofscout-validation-report.md", mime="text/markdown", use_container_width=True)
+    st.download_button("Download Markdown report", markdown, file_name="evidencescout-validation-report.md", mime="text/markdown", use_container_width=True)
     with st.expander("Structured report preview"):
         st.json({"profile": {"target": report_profile.target, "days": report_profile.days, "skills": report_profile.skills}, "opportunities": [serialize_opportunity(item) for item in opportunities]})
 
